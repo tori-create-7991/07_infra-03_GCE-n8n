@@ -70,12 +70,13 @@ docker rm n8n || true
 # - Restart automatically
 # - Expose port 5678
 # - Mount the data directory from the persistent disk
+# - Use specific version to avoid Docker compatibility issues with debian docker.io package
 docker run -d \
   --name n8n \
   --restart unless-stopped \
   -p 5678:5678 \
   -v "$N8N_DATA_DIR":/home/node/.n8n \
   -e N8N_PORT=5678 \
-  n8nio/n8n
+  n8nio/n8n:1.70.3
 
 echo "n8n startup complete."
