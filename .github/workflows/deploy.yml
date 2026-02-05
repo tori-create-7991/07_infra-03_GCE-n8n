@@ -30,7 +30,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="bucket=n8n-tf-state-${{ vars.GCP_PROJECT_ID }}"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="project_id=${{ vars.GCP_PROJECT_ID }}" -var="github_repo=${{ github.repository }}"

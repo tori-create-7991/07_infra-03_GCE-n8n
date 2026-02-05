@@ -42,21 +42,10 @@ else
   echo "Bucket already exists."
 fi
 
-# 5. Generate backend.tf
-echo "Generating infra/backend.tf..."
-cat > infra/backend.tf <<EOF
-terraform {
-  backend "gcs" {
-    bucket  = "${BUCKET_NAME}"
-    prefix  = "terraform/state"
-  }
-}
-EOF
-
-# 6. Run Terraform
+# 5. Run Terraform
 echo "Running Terraform..."
 cd infra
-terraform init
+terraform init -backend-config="bucket=${BUCKET_NAME}"
 terraform apply -auto-approve -var="project_id=${PROJECT_ID}" -var="github_repo=${GITHUB_REPO}"
 
 # 7. Output Results
@@ -73,5 +62,3 @@ echo "  GCP_PROJECT_ID: ${PROJECT_ID}"
 echo ""
 echo "n8n IP Address: $(terraform output -raw n8n_ip)"
 echo "Access n8n at: http://$(terraform output -raw n8n_ip):5678"
-echo ""
-echo "IMPORTANT: Commit 'infra/backend.tf' to your repository so GitHub Actions can find the state."
