@@ -48,13 +48,22 @@ The easiest way to deploy is using Google Cloud Shell.
     *   It will enable necessary APIs, create a bucket for Terraform state, and deploy the infrastructure.
 
 4.  **Configure GitHub Secrets**:
-    The script will output the values you need to set in your GitHub Repository (**Settings > Secrets and variables > Actions**).
+    The script will output the values you need to set in your GitHub Repository. You can do this manually in the browser (**Settings > Secrets and variables > Actions**) or using the GitHub CLI (`gh`).
 
+    **Option 1: Manual Setup (Browser)**
     *   **Secrets**:
         *   `GCP_WORKLOAD_IDENTITY_PROVIDER`
         *   `GCP_SERVICE_ACCOUNT`
     *   **Variables**:
         *   `GCP_PROJECT_ID`
+
+    **Option 2: GitHub CLI (`gh`)**
+    The setup script will output the exact commands to run, which look like this:
+    ```bash
+    gh secret set GCP_WORKLOAD_IDENTITY_PROVIDER --body "projects/..."
+    gh secret set GCP_SERVICE_ACCOUNT --body "service-account@..."
+    gh variable set GCP_PROJECT_ID --body "your-project-id"
+    ```
 
 5.  **Commit `backend.tf`**:
     The script generates `infra/backend.tf`. You **must** commit this file to your repository so GitHub Actions knows where the Terraform state is stored.

@@ -60,18 +60,29 @@ terraform init
 terraform apply -auto-approve -var="project_id=${PROJECT_ID}" -var="github_repo=${GITHUB_REPO}"
 
 # 7. Output Results
+WIF_PROVIDER=$(terraform output -raw workload_identity_provider)
+SA_EMAIL=$(terraform output -raw service_account_email)
+N8N_IP=$(terraform output -raw n8n_ip)
+
 echo ""
 echo "=== Setup Complete ==="
 echo "Please set the following secrets/variables in your GitHub Repository settings:"
 echo ""
+echo "--- Option 1: Manual Setup (Settings > Secrets and variables > Actions) ---"
 echo "Secrets:"
-echo "  GCP_WORKLOAD_IDENTITY_PROVIDER: $(terraform output -raw workload_identity_provider)"
-echo "  GCP_SERVICE_ACCOUNT: $(terraform output -raw service_account_email)"
-echo ""
+echo "  GCP_WORKLOAD_IDENTITY_PROVIDER: $WIF_PROVIDER"
+echo "  GCP_SERVICE_ACCOUNT: $SA_EMAIL"
 echo "Variables:"
 echo "  GCP_PROJECT_ID: ${PROJECT_ID}"
 echo ""
-echo "n8n IP Address: $(terraform output -raw n8n_ip)"
-echo "Access n8n at: http://$(terraform output -raw n8n_ip):5678"
+echo "--- Option 2: Using GitHub CLI (gh) ---"
+echo "Run the following commands in your terminal:"
+echo "gh secret set GCP_WORKLOAD_IDENTITY_PROVIDER --body \"$WIF_PROVIDER\""
+echo "gh secret set GCP_SERVICE_ACCOUNT --body \"$SA_EMAIL\""
+echo "gh variable set GCP_PROJECT_ID --body \"${PROJECT_ID}\""
+echo ""
+echo "--- Access Info ---"
+echo "n8n IP Address: $N8N_IP"
+echo "Access n8n at: http://$N8N_IP:5678"
 echo ""
 echo "IMPORTANT: Commit 'infra/backend.tf' to your repository so GitHub Actions can find the state."
