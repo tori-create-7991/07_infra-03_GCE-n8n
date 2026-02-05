@@ -18,7 +18,7 @@ To ensure data persistence while staying within the free tier (30GB total disk),
 graph TD
     User -->|HTTP:5678| GCE[GCE: e2-micro]
     GCE -->|Mounts| Boot[Boot Disk: 10GB]
-    GCE -->|Mounts| Data[Data Disk: 20GB\n(Persists n8n data)]
+    GCE -->|Mounts| Data["Data Disk: 20GB<br/>(Persists n8n data)"]
     GH[GitHub Actions] -->|OIDC Auth| GCP[GCP IAM]
     GH -->|Terraform Apply| GCE
 ```

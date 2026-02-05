@@ -2,11 +2,12 @@
 set -e
 
 # --- 1. Mount Data Disk ---
-DISK_DEVICE="/dev/sdb"
+# Use the predictable Google persistent disk ID
+DISK_DEVICE="/dev/disk/by-id/google-n8n_data_disk"
 MOUNT_POINT="/mnt/n8n-data"
 
 # Check if the device exists
-if [ -b "$DISK_DEVICE" ]; then
+if [ -L "$DISK_DEVICE" ]; then
   # Check if the disk is already formatted
   if ! blkid "$DISK_DEVICE"; then
     echo "Formatting data disk..."
@@ -18,8 +19,10 @@ if [ -b "$DISK_DEVICE" ]; then
   # Create mount point
   mkdir -p "$MOUNT_POINT"
 
-  # Mount the disk
-  mount -o discard,defaults "$DISK_DEVICE" "$MOUNT_POINT"
+  # Mount the disk if not already mounted
+  if ! mountpoint -q "$MOUNT_POINT"; then
+      mount -o discard,defaults "$DISK_DEVICE" "$MOUNT_POINT"
+  fi
 
   # Add to /etc/fstab for persistent mount on reboot
   if ! grep -qs "$MOUNT_POINT" /etc/fstab; then
