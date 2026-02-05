@@ -71,12 +71,14 @@ docker rm n8n || true
 # - Expose port 5678
 # - Mount the data directory from the persistent disk
 # - Use specific version to avoid Docker compatibility issues with debian docker.io package
+# - Disable secure cookie for HTTP access (required for webhooks without HTTPS)
 docker run -d \
   --name n8n \
   --restart unless-stopped \
   -p 5678:5678 \
   -v "$N8N_DATA_DIR":/home/node/.n8n \
   -e N8N_PORT=5678 \
+  -e N8N_SECURE_COOKIE=false \
   n8nio/n8n:1.70.3
 
 echo "n8n startup complete."
