@@ -1,0 +1,36 @@
+version: '3.8'
+
+# n8n 単体構成（SQLite / Redis・PostgreSQL不要）
+services:
+    n8n:
+        build:
+            context: .
+            dockerfile: n8n/dockerfile.n8n
+        image: n8n:local
+        platform: linux/amd64
+        container_name: n8n-simple
+        # restart: unless-stopped
+        environment:
+            - N8N_PORT=5678
+            - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+            - NODE_ENV=production
+            - GENERIC_TIMEZONE=${TIMEZONE:-Asia/Tokyo}
+            # 認証
+            - N8N_BASIC_AUTH_ACTIVE=true
+            - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+            - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-admin}
+            # 暗号化キー
+            - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-change_me_to_random_string}
+
+            - N8N_DISABLE_PRODUCTION_MAIN_PROCESS=true
+            # Webhook
+            - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+            - N8N_HOST=${N8N_HOST:-localhost}
+        ports:
+            - '5678:5678'
+        volumes:
+            - n8n_data:/home/node/.n8n
+
+volumes:
+    n8n_data:
+        driver: local

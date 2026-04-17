@@ -1,0 +1,124 @@
+version: '3.8'
+
+# 簡易版: PostgreSQLとRedisなし
+# n8nはSQLite、Difyは基本機能のみ
+# メモリ使用量: 約2GB
+# 推奨: 個人利用、テスト、プロトタイピング
+
+services:
+  # n8n - SQLiteモード（データベース不要）
+  n8n:
+    image: n8nio/n8n:latest
+    platform: linux/amd64
+    container_name: n8n-simple
+    restart: unless-stopped
+    environment:
+      # 基本設定
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=${TIMEZONE:-Asia/Tokyo}
+      # 認証
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-admin}
+      # 暗号化キー
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-change_me_to_random_string}
+      # SQLiteモード（デフォルト）
+      - DB_TYPE=sqlite
+      # 実行モード: regular（キューなし、Redisなし）
+      - EXECUTIONS_MODE=regular
+      - N8N_DISABLE_PRODUCTION_MAIN_PROCESS=true
+      # Webhook
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      - N8N_HOST=${N8N_HOST:-localhost}
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:5678/healthz']
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # Dify API - 簡易版（PostgreSQL/Redisなし）
+  # 注意: Difyは通常PostgreSQLとRedisが必要
+  # 完全な機能には制限があります
+  dify-api-simple:
+    image: langgenius/dify-api:latest
+    platform: linux/amd64
+    container_name: dify-api-simple
+    restart: unless-stopped
+    environment:
+      # 基本設定
+      - MODE=api
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=${DEBUG:-false}
+      # SQLite使用（開発用のみ）
+      - DB_TYPE=sqlite
+      - SQLALCHEMY_DATABASE_URI=sqlite:////app/api/dify.db
+      # Redis不要モード（機能制限あり）
+      - REDIS_HOST=
+      - CELERY_BROKER_URL=
+      # ストレージ（ローカル）
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_PATH=/app/storage
+      # ベクトルDB不要
+      - VECTOR_STORE=
+      # シークレット
+      - SECRET_KEY=${DIFY_SECRET_KEY:-change_me_to_random_string}
+      # API URLs
+      - CONSOLE_API_URL=${DIFY_CONSOLE_API_URL:-http://localhost:5001}
+      - SERVICE_API_URL=${DIFY_SERVICE_API_URL:-http://localhost:5001}
+      - APP_WEB_URL=${DIFY_APP_WEB_URL:-http://localhost:3000}
+    ports:
+      - "5001:5001"
+    volumes:
+      - dify_simple_storage:/app/storage
+      - dify_simple_db:/app/api
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:5001/health']
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+  # Dify Web Console
+  dify-web:
+    image: langgenius/dify-web:latest
+    platform: linux/amd64
+    container_name: dify-web-simple
+    restart: unless-stopped
+    environment:
+      - CONSOLE_API_URL=${DIFY_CONSOLE_API_URL:-http://localhost:5001}
+      - APP_API_URL=${DIFY_APP_API_URL:-http://localhost:5001}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dify-api-simple
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/']
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+volumes:
+  n8n_data:
+    driver: local
+  dify_simple_storage:
+    driver: local
+  dify_simple_db:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
